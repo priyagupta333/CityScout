@@ -20,6 +20,7 @@ export async function PATCH(request: Request) {
   if (!env.DB) return Response.json({error:'Storage unavailable'}, {status:503});
   let data: {id?:unknown;status?:unknown};
   try { data = await request.json(); } catch { return Response.json({error:'Invalid JSON'}, {status:400}); }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return Response.json({error:'Expected a JSON object'}, {status:400});
   if (typeof data.id !== 'string' || !['approved','rejected'].includes(String(data.status))) return Response.json({error:'Invalid decision'}, {status:400});
   const row = await env.DB.prepare('SELECT status FROM contributions WHERE id = ?').bind(data.id).first<{status:string}>();
   if (!row) return Response.json({error:'Note not found'}, {status:404});

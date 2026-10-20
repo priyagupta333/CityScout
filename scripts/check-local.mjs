@@ -15,6 +15,13 @@ try {
   userId = (await r.json()).user.id; authCookie = r.headers.get('set-cookie').split(';')[0];
   assert(!r.headers.get('set-cookie').includes('Secure'),'Local HTTP must accept the session cookie');
   r = await request('/api/account'); assert.equal((await r.json()).user.id,userId);
+  for (const [path,method] of [['/api/account','POST'],['/api/library','PUT'],['/api/contributions','POST'],['/api/moderation','PATCH']]) {
+    for (const payload of ['null','[]','42']) {
+      const invalid = await fetch(base+path,{method,headers:{Origin:base,'Content-Type':'application/json',Cookie:authCookie,'x-apnashehar-admin-key':key},body:payload});
+      assert.equal(invalid.status,400,`${path} should reject ${payload}: ${await invalid.text()}`);
+    }
+  }
+  console.log('PASS: all write endpoints reject non-object JSON without server errors.');
   r = await request('/api/account','POST',{action:'signin',email,password:'incorrect-password'}); assert.equal(r.status,401);
   r = await request('/api/library','PUT',{saved:['madras','bandra-fort'],plans:[{ids:['madras','ashok-vada'],anchor:'Matunga',savedAt:Date.now()}]}); assert.equal(r.status,200);
   r = await request('/api/library'); const saved = await r.json(); assert.equal(saved.saved.length,2); assert.equal(saved.plans.length,1);

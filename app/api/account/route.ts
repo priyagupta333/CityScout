@@ -13,6 +13,7 @@ export async function POST(request: Request) {
   if (!env.DB) return Response.json({error:'Database unavailable. Configure DATABASE_URL and run npm run db:setup.'}, {status:503});
   let data;
   try { data = await request.json() as Record<string, unknown>; } catch { return Response.json({error:'Invalid JSON'}, {status:400}); }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return Response.json({error:'Expected a JSON object'}, {status:400});
   const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';
   const password = typeof data.password === 'string' ? data.password : '';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || password.length < 8 || password.length > 128 || !['signup','signin'].includes(String(data.action))) return Response.json({error:'Enter a valid email and a password of 8–128 characters.'}, {status:400});

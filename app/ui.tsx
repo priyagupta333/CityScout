@@ -201,14 +201,15 @@ export default function CityScoutApp() {
     if(!key.trim()) {setAdminError('Enter the moderator passphrase. Explorer sign-in is separate.');return;}
     setQueueLoading(true);
     try {const r=await fetch('/api/moderation',{headers:{'x-apnashehar-admin-key':key.trim()},cache:'no-store'});
-      if(!r.ok) throw new Error(r.status===403 ? 'Moderator passphrase not accepted. Use MODERATION_KEY from .dev.vars.' : 'Queue unavailable. Please retry.');
+      if(r.status===403){setQueue([]);setQueueLoaded(false);}
+      if(!r.ok) throw new Error(r.status===403 ? 'Moderator passphrase not accepted. Enter the configured moderator passphrase.' : 'Queue unavailable. Please retry.');
       setQueue(await r.json());setAdminKey(key.trim());setAdminError('');setQueueLoaded(true);
     } catch(e) {setAdminError((e as Error).message);} finally {setQueueLoading(false);}
   },[adminKey]);
   useEffect(()=>{if(tab!=='admin'||!queueLoaded)return; const refresh=()=>void loadQueue();refresh();const timer=setInterval(refresh,15000);window.addEventListener('focus',refresh);return()=>{clearInterval(timer);window.removeEventListener('focus',refresh);};},[tab,queueLoaded,loadQueue]);
   const moderate = async (id:string,status:'approved'|'rejected') => {
     setModerating(id);
-    try {const r=await fetch('/api/moderation',{method:'PATCH',headers:{'content-type':'application/json','x-apnashehar-admin-key':adminKey},body:JSON.stringify({id,status})});if(!r.ok)throw new Error('Could not update this note.');await loadQueue();await refreshCommunity();showToast(status==='approved'?'Note published. Scores and discovery updated.':'Note declined. Discovery updated.');}
+    try {const r=await fetch('/api/moderation',{method:'PATCH',headers:{'content-type':'application/json','x-apnashehar-admin-key':adminKey},body:JSON.stringify({id,status})});if(!r.ok)throw new Error('Could not update this note.');await loadQueue();await refreshCommunity();showToast(status==='approved'?'Note approved.':'Note declined.');}
     catch(e){showToast((e as Error).message);}finally{setModerating('');}
   };
   const hasDialog=Boolean(detail||plan||form||filters||credits||authModal||scoreInfo);
@@ -840,12 +841,12 @@ export default function CityScoutApp() {
           <h1>Review the field notes.</h1>
           <p>Every community suggestion waits here until a curator checks it. Approved notes appear on the relevant place.</p>
         </div>
-        <form style={{maxWidth:560,marginBottom:30}} onSubmit={e=>{e.preventDefault();void loadQueue();}}>{!queueLoaded&&<p className="service-notice">Queue locked. Use the moderator passphrase from MODERATION_KEY in .dev.vars. Explorer sign-in is separate.</p>}
+        <form style={{maxWidth:560,marginBottom:30}} onSubmit={e=>{e.preventDefault();void loadQueue();}}>{!queueLoaded&&<p className="service-notice">Queue locked. Enter the private moderator passphrase supplied by the site administrator. Explorer sign-in is separate.</p>}
           <div className="form-field">
             <label htmlFor="admin-key">Moderator passphrase</label>
-            <input id="admin-key" type="password" value={adminKey} onChange={e => {setAdminKey(e.target.value);setQueueLoaded(false);setQueue([]);}} placeholder="Enter the private passphrase"/>
+            <input id="admin-key" type="password" autoComplete="off" disabled={Boolean(moderating)} value={adminKey} onChange={e => {setAdminKey(e.target.value);setQueueLoaded(false);setQueue([]);}} placeholder="Enter the private passphrase"/>
           </div>
-          <button className="button primary" type="submit" disabled={queueLoading}>{queueLoading?'Loading…':queueLoaded?'Refresh review queue':'Unlock review queue'} <ArrowRight size={14}/></button>
+          <button className="button primary" type="submit" disabled={queueLoading||Boolean(moderating)}>{queueLoading?'Loading…':queueLoaded?'Refresh review queue':'Unlock review queue'} <ArrowRight size={14}/></button>
           {adminError && <p className="error-message" role="alert" style={{marginTop:15}}>{adminError}</p>}{queueLoaded&&<p role="status">{queue.filter(r=>r.status==='pending').length} pending · {queue.length} total notes · Refreshes every 15 seconds</p>}
         </form>
         {queueLoaded&&queue.length===0&&<div className="empty"><h3>All caught up.</h3><p>New contributions will appear here.</p></div>}{queue.length > 0 && (

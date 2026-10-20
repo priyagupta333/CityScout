@@ -4,8 +4,9 @@ import { anchors, places } from '../lib/places';
 
 export type SavedPlan = {ids:string[];anchor:string;savedAt:number};
 type Library = {saved:string[];plans:SavedPlan[]};
-function clean(value: Partial<Library>): Library {
-  return {saved:Array.isArray(value.saved) ? value.saved.filter(id => places.some(p => p.id === id)) : [],plans:Array.isArray(value.plans) ? value.plans.filter(p => p && Array.isArray(p.ids) && p.ids.length > 0 && p.ids.every(id => places.some(x => x.id === id)) && (anchors.some(a => a.name === p.anchor) || p.anchor === 'Near me')) : []};
+function clean(value: Partial<Library> | null): Library {
+  if (!value || typeof value !== 'object') return {saved:[],plans:[]};
+  return {saved:Array.isArray(value.saved) ? value.saved.filter(id => places.some(p => p.id === id)) : [],plans:Array.isArray(value.plans) ? value.plans.filter(p => p && Array.isArray(p.ids) && p.ids.length > 0 && p.ids.length <= 2 && Number.isFinite(p.savedAt) && p.ids.every(id => places.some(x => x.id === id)) && (anchors.some(a => a.name === p.anchor) || p.anchor === 'Near me')) : []};
 }
 function read(key: string): Library {
   try { return clean(JSON.parse(localStorage.getItem(key) || '{}')); } catch { return {saved:[],plans:[]}; }

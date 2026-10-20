@@ -9,6 +9,7 @@ export async function POST(request: Request) {
   if (!env.DB) return Response.json({error:'Community storage is unavailable'}, {status:503});
   let data: Record<string,unknown>;
   try { data = await request.json(); } catch { return Response.json({error:'Invalid JSON'}, {status:400}); }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return Response.json({error:'Expected a JSON object'}, {status:400});
   const placeId = typeof data.placeId === 'string' && data.placeId ? data.placeId : null;
   const known = placeId ? places.find(p => p.id === placeId) : null;
   if (placeId && !known) return Response.json({error:'Unknown place'}, {status:400});

@@ -16,6 +16,7 @@ export async function PUT(request: Request) {
   let body;
   try { const raw = await request.text(); if(raw.length > 50000) return Response.json({error:'Library too large'}, {status:413}); body = JSON.parse(raw); }
   catch { return Response.json({error:'Invalid JSON'}, {status:400}); }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return Response.json({error:'Expected a JSON object'}, {status:400});
   const validId = (id: unknown) => typeof id === 'string' && places.some(p => p.id === id);
   if (!Array.isArray(body.saved) || !body.saved.every(validId) || !Array.isArray(body.plans) || body.plans.length > 100 || !body.plans.every((p: {ids?: unknown[];anchor?:string;savedAt?:number}) => p && Array.isArray(p.ids) && p.ids.length >= 1 && p.ids.length <= 2 && p.ids.every(validId) && typeof p.anchor === 'string' && (anchors.some(a => a.name === p.anchor) || p.anchor === 'Near me') && typeof p.savedAt === 'number' && Number.isFinite(p.savedAt))) return Response.json({error:'Invalid saved items'}, {status:400});
   await env.DB!.prepare('INSERT INTO explorer_library (user_id,saved,plans) VALUES (?,?,?) ON CONFLICT(user_id) DO UPDATE SET saved=excluded.saved, plans=excluded.plans').bind(user.id,JSON.stringify([...new Set(body.saved)]),JSON.stringify(body.plans)).run();
