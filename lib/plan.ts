@@ -1,8 +1,15 @@
-import { distanceKm, estimate, type Place } from './places';
+import { anchors, distanceKm, estimate, type Place } from './places';
 import { railRoute } from './rail';
+import { walkingLeg } from './personalise';
 
-export function planEstimate(stops:Place[],anchor:string,origin?:{lat:number;lng:number}) {
+export function planEstimate(stops:Place[],anchor:string,origin?:{lat:number;lng:number},mode:'transit'|'walking'='transit') {
   if(!stops.length)return {low:0,high:0,minutes:0};
+  if(mode==='walking') {
+    const start=(anchor==='Near me'?origin:undefined)??anchors.find(a=>a.name===anchor)??anchors[0];
+    const route=[start,...stops,start];
+    const minutes=stops.reduce((n,p)=>n+p.duration,0)+route.slice(1).reduce((n,p,i)=>n+walkingLeg(route[i],p),0);
+    return {low:stops.reduce((n,p)=>n+p.min,0),high:stops.reduce((n,p)=>n+p.max,0),minutes};
+  }
   const first=estimate(stops[0],anchor,origin),last=estimate(stops[stops.length-1],anchor,origin);
   let minutes=first.travelMin+last.travelMin+stops.reduce((n,p)=>n+p.duration,0);
   let travelCost=stops.length===1?first.travelCost:Math.ceil((first.travelCost+last.travelCost)/2);
