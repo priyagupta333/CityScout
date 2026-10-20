@@ -821,7 +821,7 @@ export default function CityScoutApp() {
           <div className="note-block">
             <div className="eyebrow">IMAGE CREDITS</div>
             <h2>Real places, real photographs.</h2>
-            <p>Images include photographs with source credits and clearly labelled original illustrations. Review photo licences before public release. Crops and web compression have been applied for the interface.</p>
+            <p>Place photographs include source credits and licence information. Images are resized, compressed and cropped to fit the interface.</p>
             <button className="text-button" onClick={() => setCredits(true)}>View photo credits <ArrowRight size={14}/></button>
           </div>
         </div>
@@ -1076,7 +1076,7 @@ export default function CityScoutApp() {
           <button className="icon-button dialog-close" onClick={() => setCredits(false)} aria-label="Close credits"><X size={20}/></button>
           <div className="eyebrow">REAL MUMBAI, REAL PHOTOGRAPHS</div>
           <h2>Photo credits.</h2>
-          <p>Image credits and sources. Illustrations are labelled; photos need licence verification before public release.</p>
+          <p>Photographers, image sources and licence information for the places in CityScout.</p>
           <div className="credits-grid">
             {places.map(p => (
               <div className="credit-item" key={p.id}>

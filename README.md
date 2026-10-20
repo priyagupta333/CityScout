@@ -123,7 +123,7 @@ Ratings, review counts and seeded verification signals are **sample data**, not 
 
 ## Catalog and imagery
 
-The 30-place catalog retains the existing 22 entries and adds Five Gardens, Shivaji Park, Kamala Nehru Park, Sewri Fort, Durgadi Fort, Karnala Bird Sanctuary, Jewel of Navi Mumbai and Sagar Vihar. New entries use labelled original SVG illustrations and reference links; existing listings retain their photos and available credits.
+The 30-place catalog retains the existing 22 entries and adds Five Gardens, Shivaji Park, Kamala Nehru Park, Sewri Fort, Durgadi Fort, Karnala Bird Sanctuary, Jewel of Navi Mumbai and Sagar Vihar. All 30 listings now use photographs. The 14 entries that previously used repeated illustrated placeholders now have locally bundled destination photos, with photographer attribution and licence links in [PHOTO_CREDITS.md](docs/PHOTO_CREDITS.md) and the in-app Photo credits panel.
 
 Prices, opening hours, accessibility, seating and travel times remain **illustrative or unverified**. This pilot has no live routing, fare or availability data. Check venue sources before traveling. Existing photo rights and credits also need review before public release.
 

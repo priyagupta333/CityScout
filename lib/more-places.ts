@@ -1,4 +1,5 @@
 import type { Place } from './places';
+import { placePhotos } from './place-photos';
 type Seed = Pick<Place,'id'|'name'|'area'|'station'|'category'|'subtitle'|'lat'|'lng'|'duration'|'walk'|'indoor'|'tags'|'pair'|'source'> & Partial<Pick<Place,'min'|'max'>>;
 // Sources establish the destinations; costs and transit remain illustrative.
 const seeds: Seed[] = [
@@ -25,5 +26,5 @@ export const morePlaces: Place[] = seeds.map(p => ({
   best:p.indoor ? 'During published venue opening hours' : 'Daylight or early evening; check weather and access',
   accessibility:'Entry points and facilities vary. Confirm a suitable route for your mobility needs.',
   seating:'Public seating or venue rest areas may be limited; check locally.',
-  image:`/images/${p.id}.svg`,credit:'CityScout original illustration',creditUrl:`/images/${p.id}.svg`,license:'Original SVG illustration'
+  ...placePhotos[p.id]
 }));

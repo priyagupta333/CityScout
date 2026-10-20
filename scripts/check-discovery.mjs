@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 const out = path.resolve('outputs/test-modules');
 await fs.mkdir(out,{recursive:true});
-for(const name of ['places','more-places','discovery','rail','gem-score','plan']) {
+for(const name of ['places','more-places','place-photos','discovery','rail','gem-score','plan']) {
   const source = await fs.readFile(`lib/${name}.ts`,'utf8');
   const js = ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/from '(.+?)'/g,(_,name)=>`from '${name}.mjs'`);
   await fs.writeFile(path.join(out,`${name}.mjs`),js);
@@ -18,6 +18,7 @@ const {planEstimate}=await import(pathToFileURL(path.join(out,'plan.mjs')));
 const base = {anchor:'Matunga',mood:'All',budget:'any',hours:'any',query:'',indoor:false,sort:'near',closed:new Set()};
 assert.equal(new Set(places.map(p => p.id)).size,places.length);
 assert.equal(places.length,30,'Catalog must contain exactly 30 places');
+assert(places.every(place => /\.(webp|jpg|jpeg|png)$/i.test(place.image)), 'Every listing must have a photograph rather than the old illustration');
 assert.equal(new Set(anchors.map(a=>a.name)).size,anchors.length);
 for(const p of places) { assert(anchors.some(a => a.name === p.station),`Missing station for ${p.name}`); assert(places.some(x => x.id === p.pair),`Broken pair for ${p.name}`); await fs.access(`public${p.image}`); assert(p.min <= p.max); }
 assert.equal(discover({...base,query:'unknown-place-xyz'}).length,0);
