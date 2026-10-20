@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { discover } from '../lib/discovery';
 import { planEstimate } from '../lib/plan';
+import { SmartItinerary } from '../components/smart-itinerary';
+import { SmartFinder } from '../components/smart-finder';
 import { gemScore } from '../lib/gem-score';
 import { RailMap } from '../components/rail-map';
 import { useLibrary } from '../hooks/use-library';
@@ -23,7 +25,7 @@ export type ExplorerUser = {
   createdAt: number;
 };
 
-type Tab = 'discover' | 'saved' | 'notes' | 'admin';
+type Tab = 'discover' | 'finder' | 'saved' | 'notes' | 'admin';
 type Report = { id: string; placeId: string | null; placeName: string; topic: string; note: string; status: string; createdAt: string; };
 const readStore = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) || '') as T; } catch { return fallback; } };
 const scrollToExplore = () => document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
@@ -42,7 +44,10 @@ export default function CityScoutApp() {
   const [mapFocus, setMapFocus] = useState('khotachiwadi');
   const [detail, setDetail] = useState<Place | null>(null);
   const [plan, setPlan] = useState<Place | null>(null);
-  const [pairId, setPairId] = useState('');
+  const [extraIds,setExtraIds] = useState<string[]>([]);
+  const [planMode,setPlanMode] = useState<'transit'|'walking'>('transit');
+  const [planBudget,setPlanBudget] = useState<number>();
+  const [planMinutes,setPlanMinutes] = useState<number>();
   const [form, setForm] = useState(false);
   const [formPlace, setFormPlace] = useState('');
   const [formTopic,setFormTopic] = useState('A local tip');
@@ -89,9 +94,10 @@ export default function CityScoutApp() {
     if (selected) { setDetail(selected); setEntered(true); }
     const planIds = params.get('plan')?.split(',') ?? [];
     const selectedPlan = places.find(p => p.id === planIds[0]);
-    if (selectedPlan) { setPlan(selectedPlan); setPairId(planIds[1] ?? ''); setEntered(true); }
+    if (selectedPlan) { setPlan(selectedPlan); setExtraIds([...new Set(planIds.slice(1).filter(id=>id!==selectedPlan.id&&places.some(p=>p.id===id)))].slice(0,3));setPlanMode(params.get('travel')==='walking'?'walking':'transit');for(const [key,setter] of [['cap',setPlanBudget],['minutes',setPlanMinutes]] as const){const value=params.get(key);if(value!==null&&Number.isFinite(Number(value))&&Number(value)>=(key==='minutes'?1:0)&&value.trim()!==''&&Number(value)<=10000)setter(Number(value));}setEntered(true); }
     if (params.get('from') && anchors.some(a => a.name === params.get('from'))) setAnchor(params.get('from')!);
     if (params.get('view') === 'saved') { setTab('saved'); setEntered(true); }
+    if (params.get('view') === 'finder') { setTab('finder'); setEntered(true); }
     setBooted(true);
     }; restore();
   }, []);
@@ -107,7 +113,7 @@ export default function CityScoutApp() {
   useEffect(() => { 
     const escape = (e: KeyboardEvent) => { 
       if (e.key === 'Escape') { 
-        setDetail(null); setPlan(null); setForm(false); setFilters(false); setCredits(false); setUserDropdown(false); setAuthModal(false); setScoreInfo(null); history.replaceState(null,'',location.pathname); 
+        setDetail(null); setPlan(null); setForm(false); setFilters(false); setCredits(false); setUserDropdown(false); setAuthModal(false); setScoreInfo(null); history.replaceState(null,'',location.pathname+(new URLSearchParams(location.search).get('view')==='finder'?'?view=finder':''));
       } 
     }; 
     document.addEventListener('keydown', escape); 
@@ -176,22 +182,24 @@ export default function CityScoutApp() {
   const activePlaces = useMemo(()=>discover({anchor,origin,mood,budget,hours,query,indoor,sort,closed,hiddenOnly,observations:updates}),[anchor,origin,mood,budget,hours,query,indoor,sort,closed,hiddenOnly,updates]);
   const resetFilters = () => {setMood('All');setBudget('any');setHours('any');setIndoor(false);setHiddenOnly(false);setQuery('');};
   const focus = activePlaces.find(p => p.id === mapFocus) ?? activePlaces[0];
-  const pair = pairId ? places.find(p => p.id === pairId && p.id !== plan?.id && !closed.has(p.id)) : undefined;
-  const planStats = plan ? planEstimate(pair?[plan,pair]:[plan],anchor,origin) : null;
+  const planStops = plan ? [plan,...extraIds.map(id=>places.find(p=>p.id===id)).filter((p):p is Place=>Boolean(p))] : [];
+  const planStats = plan ? planEstimate(planStops,anchor,origin,planMode) : null;
+  const planQuery = (stops:Place[],from=anchor,mode=planMode,limits:{budget?:number;minutes?:number}={budget:planBudget,minutes:planMinutes}) => `plan=${stops.map(p=>p.id).join(',')}&from=${encodeURIComponent(from)}&travel=${mode}${limits.budget!==undefined?'&cap='+limits.budget:''}${limits.minutes!==undefined?'&minutes='+limits.minutes:''}${tab==='finder'?'&view=finder':''}`;
+  const changeStops = (stops:Place[]) => {if(!stops.length)return;setPlan(stops[0]);setExtraIds(stops.slice(1).map(p=>p.id));history.replaceState(null,'',`?${planQuery(stops)}`);};
 
-  const switchTab = (next: Tab) => {history.replaceState(null,'',location.pathname); setTab(next); setDetail(null); setPlan(null); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const openPlace = (p: Place) => { setDetail(p); setPlan(null); history.replaceState(null, '', `?place=${p.id}`); };
-  const closeDetail = () => { setDetail(null); history.replaceState(null, '', location.pathname); };
-  const openPlan = (p: Place, partner = '', from = anchor) => { setPlan(p); setPairId(partner); setDetail(null); history.replaceState(null, '', `?plan=${p.id}${partner ? ',' + partner : ''}&from=${encodeURIComponent(from)}`); };
-  const closePlan = () => { setPlan(null); history.replaceState(null, '', location.pathname); };
+  const switchTab = (next: Tab) => {history.replaceState(null,'',next==='finder'?`${location.pathname}?view=finder`:location.pathname); setTab(next); setDetail(null); setPlan(null); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const openPlace = (p: Place) => { setDetail(p); setPlan(null); history.replaceState(null, '', `?place=${p.id}${tab==='finder'?'&view=finder':''}`); };
+  const closeDetail = () => { setDetail(null); history.replaceState(null, '', tab==='finder'?`${location.pathname}?view=finder`:location.pathname); };
+  const openPlan = (p: Place, partner = '', from = anchor, mode:'transit'|'walking'='transit',limits:{budget?:number;minutes?:number}={}) => {const extra=[...new Set(partner.split(',').filter(id=>id!==p.id&&places.some(x=>x.id===id)))].slice(0,3);setPlan(p);setExtraIds(extra);setPlanMode(mode);setPlanBudget(limits.budget);setPlanMinutes(limits.minutes);setDetail(null);history.replaceState(null,'',`?${planQuery([p,...extra.map(id=>places.find(x=>x.id===id)!)],from,mode,limits)}`);};
+  const closePlan = () => { setPlan(null); history.replaceState(null, '', tab==='finder'?`${location.pathname}?view=finder`:location.pathname); };
   const portableAnchor = anchor==='Near me' ? [...anchors].sort((a,b)=>distanceKm(a,origin??plan??anchors[0])-distanceKm(b,origin??plan??anchors[0]))[0].name : anchor;
-  const planIds = plan ? [plan.id,...(pair?[pair.id]:[])] : [];
-  const planIsSaved = savedPlans.some(p=>p.ids.join(',')===planIds.join(',')&&p.anchor===portableAnchor);
+  const planIds = planStops.map(p=>p.id);
+  const planIsSaved = savedPlans.some(p=>p.ids.join(',')===planIds.join(',')&&p.anchor===portableAnchor&&(p.mode??'transit')===planMode&&p.budget===planBudget&&p.minutes===planMinutes);
   const toggleSave = (id: string) => { if(!libraryReady) return showToast('Loading your saved list. Please try again.'); const exists = saved.includes(id); setSaved(previous=>previous.includes(id)?previous.filter(x=>x!==id):[...previous,id]); showToast(exists ? 'Removed from your saved places' : 'Saved for another day'); };
   const savePlan = () => {
     if(!libraryReady)return showToast('Loading your saved list. Please try again.');
     if(!plan)return;
-    setSavedPlans(previous=>planIsSaved ? previous.filter(p=>!(p.ids.join(',')===planIds.join(',')&&p.anchor===portableAnchor)) : [...previous,{ids:planIds,anchor:portableAnchor,savedAt:Date.now()}]);
+    setSavedPlans(previous=>planIsSaved ? previous.filter(p=>!(p.ids.join(',')===planIds.join(',')&&p.anchor===portableAnchor&&(p.mode??'transit')===planMode&&p.budget===planBudget&&p.minutes===planMinutes)) : [...previous,{ids:planIds,anchor:portableAnchor,mode:planMode,budget:planBudget,minutes:planMinutes,savedAt:Date.now()}]);
     showToast(planIsSaved?'Removed saved plan':anchor==='Near me'?`Saved from ${portableAnchor}; precise location is not stored.`:currentUser?'Mini-plan saved to your account':'Mini-plan saved on this device');
   };
   const shareUrl = (param: string) => `${location.origin}${location.pathname}?${param}`;
@@ -324,6 +332,9 @@ export default function CityScoutApp() {
         <nav className="nav" aria-label="Main navigation">
           <button className={tab === 'discover' ? 'active' : ''} onClick={() => switchTab('discover')}>
             Discover
+          </button>
+          <button className={tab === 'finder' ? 'active' : ''} aria-current={tab === 'finder' ? 'page' : undefined} onClick={() => switchTab('finder')}>
+            Plan my day
           </button>
           <button className={tab === 'notes' ? 'active' : ''} onClick={() => switchTab('notes')}>
             Our story
@@ -743,6 +754,11 @@ export default function CityScoutApp() {
       </main>
     </>}
 
+    <main className="finder-page" hidden={tab!=='finder'}>
+      <div className="container page-intro"><div className="eyebrow">YOUR PERSONAL CITY PLANNER</div><h1>Plan your kind of day.</h1><p>Find places that fit your vibe, explore on a student budget, and build a mini-itinerary in one place.</p></div>
+      <SmartFinder anchor={anchor} origin={origin} closed={closed} observations={updates} onAnchor={name=>{setAnchor(name);setOrigin(undefined);}} onOpen={openPlace} onPlan={(stops,cap,mode,minutes)=>openPlan(stops[0],stops.slice(1).map(p=>p.id).join(','),anchor,mode,{budget:cap,minutes})} onContribute={()=>{setFormTopic('New place suggestion');setFormPlace('');setForm(true);}}/>
+    </main>
+
     {/* Saved Places Tab */}
     {tab === 'saved' && (
       <main className="container">
@@ -761,14 +777,13 @@ export default function CityScoutApp() {
           <div className="collection-grid" style={{marginBottom:35}}>
             {savedPlans.map((p,i) => { 
               const first = places.find(x => x.id === p.ids[0]); 
-              const second = places.find(x => x.id === p.ids[1]); 
               return first && (
-                <button className="collection-card" key={i} onClick={() => { setOrigin(undefined); setAnchor(p.anchor); openPlan(first, second?.id, p.anchor); }}>
+                <button className="collection-card" key={i} onClick={() => { setOrigin(undefined); setAnchor(p.anchor); openPlan(first,p.ids.slice(1).join(','),p.anchor,p.mode??'transit',{budget:p.budget,minutes:p.minutes}); }}>
                   <span className="eyebrow">FROM {p.anchor.toUpperCase()}</span>
                   <ArrowUpRight className="collection-arrow" size={19}/>
                   <div>
-                    <h3>{first.name}{second ? ` + ${second.name}` : ''}</h3>
-                    <p>Open your saved plan</p>
+                    <h3>{first.name}{p.ids.length>1?` + ${p.ids.length-1} more stop${p.ids.length>2?'s':''}`:''}</h3>
+                    <p>{p.ids.length} stops · {p.mode==='walking'?'Walking':'Rail + walking'} · Open your saved plan</p>
                   </div>
                 </button>
               ); 
@@ -880,6 +895,7 @@ export default function CityScoutApp() {
           </div>
           <div className="footer-links">
             <button onClick={() => switchTab('discover')}>Explore</button>
+            <button onClick={() => switchTab('finder')}>Plan my day</button>
             <button onClick={() => switchTab('notes')}>Our story</button>
             <button onClick={() => setCredits(true)}>Photo credits</button>
             <button onClick={() => setForm(true)}>Share a place</button>
@@ -976,41 +992,7 @@ export default function CityScoutApp() {
     )}
 
     {/* Plan Builder Modal */}
-    {plan && planStats && (
-      <div className="overlay" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) closePlan(); }}>
-        <article className="dialog" role="dialog" aria-modal="true" aria-label="Mini-plan">
-          <button className="icon-button dialog-close" onClick={closePlan} aria-label="Close mini-plan"><X size={20}/></button>
-          <div className="plan-header">
-            <div className="eyebrow">A SMALL PLAN FOR A GOOD DAY</div>
-            <h2>Your Mumbai mini-plan.</h2>
-            <p>Starting from {anchor} · One or two thoughtful stops, your way.</p>
-            <div className="plan-summary">
-              <div><small>EST. TOTAL SPEND</small><strong>{money(planStats.low,planStats.high)}</strong></div>
-              <div><small>EST. WHOLE TRIP</small><strong>~{Math.ceil(planStats.minutes/15)*15} min</strong></div>
-            </div>
-          </div>
-          <div className="plan-body"><RailMap origin={origin} results={pair?[plan,pair]:[plan]} anchor={anchor} selected={plan} stops={pair?[plan,pair]:[plan]} onStation={name=>{setAnchor(name);setOrigin(undefined);history.replaceState(null,'',`?plan=${plan.id}${pair?','+pair.id:''}&from=${encodeURIComponent(name)}`);}} onSelect={openPlace} onOpen={openPlace}/>
-            <div className="timeline-item"><span className="timeline-dot"/><h3>Leave from {anchor}</h3><p>Allow approximately {estimate(plan,anchor,origin).travelMin} minutes to your first stop. Check live service before departure.</p></div>
-            <div className="timeline-item"><span className="timeline-dot"/><div className="timeline-card"><img src={plan.image} alt=""/><div><h3>{plan.name}</h3><p>{plan.area} · around {plan.duration} minutes here</p><button onClick={() => openPlace(plan)}>See place details</button></div></div></div>
-            {pair && <div className="timeline-item"><span className="timeline-dot"/><div className="timeline-card"><img src={pair.image} alt=""/><div><h3>{pair.name}</h3><p>{pair.area} · around {pair.duration} minutes here</p><button onClick={() => openPlace(pair)}>See place details</button></div></div></div>}
-            <div className="timeline-item"><span className="timeline-dot"/><h3>Head back with a story</h3><p>Return travel is included as an estimate; choose the route that suits you.</p></div>
-            <div className="plan-option">
-              <label htmlFor="pair">{pair ? 'Swap your second stop' : 'Have more time? Add a second stop'}</label>
-              <select id="pair" value={pairId} onChange={e => { setPairId(e.target.value); history.replaceState(null,'',`?plan=${plan.id}${e.target.value ? ','+e.target.value : ''}&from=${encodeURIComponent(anchor)}`); }}>
-                <option value="">One stop is enough</option>
-                {places.filter(p => p.id !== plan.id && !closed.has(p.id)).sort((a,b) => distanceKm(a,plan) - distanceKm(b,plan)).map(p => <option key={p.id} value={p.id}>{p.name} · {p.area}</option>)}
-              </select>
-            </div>
-            <div className="caution"><Info size={15}/><span>Cost and travel time are planning estimates based on suburban rail and walking.</span></div>
-            <div className="detail-actions">
-              <button className="button primary" disabled={closed.has(plan.id)&&!planIsSaved} onClick={savePlan}>{planIsSaved?'Remove saved plan':'Save this plan'} <Heart size={14}/></button>
-              <button className="button secondary" onClick={() => share('My CityScout mini-plan',`plan=${plan.id}${pair ? ','+pair.id : ''}&from=${encodeURIComponent(portableAnchor)}`)}>Share plan <ArrowUpRight size={14}/></button>
-              <a className="button secondary" href={directions(plan,anchor === 'Near me' ? undefined : anchor)} target="_blank" rel="noopener noreferrer">First stop directions <Navigation size={14}/></a>{pair&&<a className="button secondary" href={directions(plan,undefined,pair)} target="_blank" rel="noopener noreferrer">Next stop directions <Navigation size={14}/></a>}
-            </div>
-          </div>
-        </article>
-      </div>
-    )}
+    {plan && planStats && <SmartItinerary stops={planStops} anchor={anchor} origin={origin} mode={planMode} budget={planBudget} minutes={planMinutes} onMinutes={value=>{setPlanMinutes(value);history.replaceState(null,'',`?${planQuery(planStops,anchor,planMode,{budget:planBudget,minutes:value})}`);}} closed={closed} saved={planIsSaved} onStops={changeStops} onAnchor={name=>{setAnchor(name);setOrigin(undefined);history.replaceState(null,'',`?${planQuery(planStops,name)}`);}} onMode={mode=>{setPlanMode(mode);history.replaceState(null,'',`?${planQuery(planStops,anchor,mode)}`);}} onBudget={value=>{setPlanBudget(value);history.replaceState(null,'',`?${planQuery(planStops,anchor,planMode,{budget:value,minutes:planMinutes})}`);}} onOpen={openPlace} onSave={savePlan} onShare={()=>share('My CityScout itinerary',planQuery(planStops,portableAnchor))} onClose={closePlan}/>}
 
     {/* Filter Dialog */}
     {filters && (
