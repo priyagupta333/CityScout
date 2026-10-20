@@ -1,6 +1,6 @@
-import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { pgTable, text } from 'drizzle-orm/pg-core';
 
-export const contributions = sqliteTable('contributions', {
+export const contributions = pgTable('contributions', {
   id: text('id').primaryKey(),
   placeId: text('place_id'),
   placeName: text('place_name').notNull(),
@@ -12,14 +12,14 @@ export const contributions = sqliteTable('contributions', {
   sessionId: text('session_id').notNull(),
 });
 
-export const moderationAudit = sqliteTable('moderation_audit', {
+export const moderationAudit = pgTable('moderation_audit', {
   id: text('id').primaryKey(),
   contributionId: text('contribution_id').notNull(),
   action: text('action').notNull(),
   createdAt: text('created_at').notNull(),
 });
 
-export const explorerUsers = sqliteTable('explorer_users', {
+export const explorerUsers = pgTable('explorer_users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
@@ -30,13 +30,13 @@ export const explorerUsers = sqliteTable('explorer_users', {
   createdAt: text('created_at').notNull(),
 });
 
-export const explorerSessions = sqliteTable('explorer_sessions', {
+export const explorerSessions = pgTable('explorer_sessions', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => explorerUsers.id),
   expiresAt: text('expires_at').notNull(),
 });
 
-export const explorerLibrary = sqliteTable('explorer_library', {
+export const explorerLibrary = pgTable('explorer_library', {
   userId: text('user_id').primaryKey().references(() => explorerUsers.id),
   saved: text('saved').notNull().default('[]'),
   plans: text('plans').notNull().default('[]'),

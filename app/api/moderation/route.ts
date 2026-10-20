@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '../../../db/runtime';
 import { publicReport, safeSameOrigin, type ContributionRow } from '../../../lib/community';
 
 function authorized(request: Request) {

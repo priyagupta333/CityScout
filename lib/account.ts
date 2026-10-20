@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '../db/runtime';
 
 export type AccountRow = {id:string;name:string;email:string;station:string;vibe:string;password_hash:string;salt:string;created_at:string};
 export function profile(row: AccountRow) {

@@ -4,6 +4,8 @@
 
 Mumbai discovery and outing planning, built by CtrlFreaks for Techformers 2026. This repository retains the original CityScout repository name; the application brand is ApnaShehar.
 
+**Hosting:** Standard Next.js + Neon PostgreSQL, ready for Vercel configuration. See [the deployment guide](docs/DEPLOYMENT.md) for exact settings and environment variables.
+
 ## Quick start
 
 ```powershell
@@ -12,13 +14,14 @@ cd CityScout
 npm ci
 ```
 
-Create a file named `.dev.vars` in the repository root with your own private value:
+Create `.env.local` from `.env.example` and fill in your private values:
 
 ```dotenv
+DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
 MODERATION_KEY=replace-with-your-own-private-passphrase
 ```
 
-Then run `npm run dev`. Do not commit `.dev.vars`. No shared administrator password is distributed in this repository.
+Then run `npm run db:setup` followed by `npm run dev`. Do not commit `.env.local`. No shared administrator password is distributed in this repository.
 
 ## Repository guide
 
@@ -33,7 +36,7 @@ Then run `npm run dev`. Do not commit `.dev.vars`. No shared administrator passw
 | `lib/places.ts`, `lib/more-places.ts` | Place catalog, metadata and estimates |
 | `lib/discovery.ts`, `lib/gem-score.ts` | Search, filtering and ranking |
 | `lib/rail.ts`, `lib/plan.ts` | Railway graph, routing and outing estimates |
-| `db/`, `drizzle/` | D1 schema, migrations and migration metadata |
+| `db/`, `postgres/` | PostgreSQL schema, query adapter and versioned SQL migrations |
 | `public/` | Catalog imagery, icons, manifest and service worker |
 | `scripts/` | Development setup and automated checks |
 | `build/` | Maintained worker/plugin source, not generated build output |
@@ -48,32 +51,36 @@ Then run `npm run dev`. Do not commit `.dev.vars`. No shared administrator passw
 | `/api/community` | GET | Public approved community notes |
 | `/api/moderation` | GET, PATCH | List submissions and approve/reject them using the moderator key |
 
-The Curator Desk uses the `x-apnashehar-admin-key` header. A contribution is saved in D1 immediately as `pending`, so it will not appear publicly until approved. The moderation queue returns at most 200 submissions; the public feed returns at most 100 approved notes.
+The Curator Desk uses the `x-apnashehar-admin-key` header. A contribution is saved in Neon immediately as `pending`, so it will not appear publicly until approved. The moderation queue returns at most 200 submissions; the public feed returns at most 100 approved notes.
 
 ## Data ownership and persistence
 
-The place catalog is bundled TypeScript data. Accounts, sessions, signed-in libraries, submissions and moderation audit records live in D1. Guest lists live in browser storage and are specific to that browser/origin. Local D1 files are stored under the ignored `.wrangler/state` directory; cloning this repository creates a fresh database after migrations, without another developer's accounts or notes.
+The 30-place catalog is bundled TypeScript data. Accounts, sessions, signed-in libraries, contributions and moderation audits live in Neon PostgreSQL. Guest lists live in browser storage and are specific to that browser/origin.
 
-Database tables are `contributions`, `moderation_audit`, `explorer_users`, `explorer_sessions` and `explorer_library`. Keep migration SQL and metadata together. After schema changes, run `npm run db:generate`, inspect the generated SQL, then apply it with `npm run db:setup` for local development.
+The server reads `DATABASE_URL` and `MODERATION_KEY` from `.env.local` locally, or from Vercel environment variables when deployed. Neither value is exposed as a public environment variable. Queries are parameterized; moderator status and audit changes use a database transaction.
 
-## Deployment status
+Run `npm run db:setup` once against the intended Neon database. Ordered SQL files in `postgres/` are applied atomically, with checksums recorded in `_apnashehar_migrations`. Repeating setup verifies the schema without deleting data. Add future reviewed migrations as new SQL files; do not edit already-applied files. The five application tables are `contributions`, `moderation_audit`, `explorer_users`, `explorer_sessions` and `explorer_library`.
 
-The checked-in configuration is for **local development**, with a placeholder D1 database ID. `npm start` previews a built application locally; it is not a production hosting command.
+The old local Cloudflare D1 files under `.wrangler/state` remain untouched and excluded from Git. Those accounts and notes are not automatically copied into Neon. `drizzle/`, `wrangler.local.json`, the Sites build tooling and the `db:setup:d1` command remain legacy references; normal development and production commands now use Next.js and Neon.
 
-For Cloudflare Workers, configure a real remote D1 database bound as `DB`, apply the SQL migrations remotely, configure `MODERATION_KEY` as a production secret, and deploy the worker and static assets. Local database contents are not uploaded automatically. Export/import data explicitly if you need to preserve local records.
+During this Neon setup, the existing local accounts, sessions, saved library, contributions and moderation audit were copied additively using `scripts/import-local-d1.mjs`. No source records were deleted. A fresh clone does not need to repeat this import.
 
-For Vercel or Render, first adapt the Cloudflare-specific runtime imports and database binding. Vercel needs a hosted database such as PostgreSQL; a writable local SQLite file is not persistent shared storage there. Render can use a hosted database or, on a paid service, SQLite on a persistent disk after backend adaptation. This repository does not claim a ready-to-use Vercel or Render deployment configuration.
+## Deploy on Vercel
+
+Follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Import `priyagupta333/CityScout`, select Next.js, use root `./`, Node 22.x, install command `npm ci`, and build command `npm run build`. Leave Output Directory at its framework default. Add server-only `DATABASE_URL` and `MODERATION_KEY` before deploying. A separate backend host is not required.
+
+The database has been prepared separately from the Vercel deployment. Builds do not run migrations. Preview deployments should use a separate Neon branch if you want their data isolated from production. New environment values take effect on the next deployment.
 
 ## Troubleshooting
 
 | Symptom | Check |
 | --- | --- |
-| Account storage unavailable | Run `npm run db:setup`; verify the `DB` binding |
-| Curator access denied | Set `MODERATION_KEY` in `.dev.vars`, restart the server, and enter that exact value |
+| Account storage unavailable | Set `DATABASE_URL` and run `npm run db:setup` |
+| Curator access denied | Set `MODERATION_KEY` in `.env.local` or Vercel, restart the server, and enter that exact value |
 | Submitted note not public | Open Curator Desk and approve the pending submission |
 | No search results | Clear restrictive mood, budget, time or hidden-gem filters |
 | Saved guest list missing on another device | Sign in to use the database-backed account library |
-| Database empty after deployment | Local and remote databases are separate; apply remote migrations and explicitly migrate records |
+| Database empty after deployment | Check the deployed `DATABASE_URL`; local D1 records are not automatically imported |
 
 ## Development and contribution notes
 
@@ -92,15 +99,15 @@ npm ci
 npm run dev
 ```
 
-Open the local address printed by the server, normally http://localhost:3000. The `predev` script applies outstanding database migrations automatically. Local Cloudflare D1 data persists in `.wrangler/state` across restarts. `npm run db:setup` can also be run independently and is safe to repeat. The local configuration is in `wrangler.local.json`; this command never targets a remote database.
+Open the local address printed by the server, normally http://localhost:3000. Run `npm run db:setup` explicitly before first use. It targets the Neon database specified by `DATABASE_URL`, so use the correct environment. It is safe to repeat and does not delete records.
 
-For the curator desk, set a private `MODERATION_KEY` in the ignored `.dev.vars` file. Hosted installations need the same secret and all SQL migrations applied to their D1 binding before account features are used.
+For Curator Desk, set a private `MODERATION_KEY` in ignored `.env.local`. Hosted installations need both server environment variables and PostgreSQL migrations applied before account features are used.
 
 ## Working flows
 
 - Guests can discover, plan, contribute and keep a device-local list. Existing saved places from the previous brand migrate automatically.
-- Accounts live in D1. Passwords use salted PBKDF2/SHA-256, with expiring HttpOnly session cookies. Sign-out invalidates the server session.
-- Each account has its own saved places and plans in D1. Guest lists remain separate. Account lists reload after sign-in, with a local fallback and retry on reconnection. Simultaneous account edits use the latest written list.
+- Accounts live in Neon PostgreSQL. Passwords use salted PBKDF2/SHA-256, with expiring HttpOnly session cookies. Sign-out invalidates the server session.
+- Each account has its own saved places and plans in Neon PostgreSQL. Guest lists remain separate. Account lists reload after sign-in, with a local fallback and retry on reconnection. Simultaneous account edits use the latest written list.
 - Search covers venue names, areas, stations, moods, subtitles and tags. Budget uses the upper estimated trip cost; time includes the visit and return travel. Filters never silently relax.
 - Contributions are pending until reviewed, with a six-per-day device-session limit. Approval publishes a note. Closed/restricted reports remove places from discovery; rejecting those reports restores them. Public updates refresh on window focus and every 30 seconds.
 - Saved plans restore the starting station. Shared URLs open the selected place or plan. First- and second-stop directions have separate Google Maps handoffs.
@@ -130,10 +137,10 @@ npm run lint
 npm run build
 ```
 
-`test:local` requires a running local server and moderator key. It tests real D1 account creation, password rejection, session restore, saved-plan persistence, origin validation, contributions, rate limiting, moderation and publication/rejection. It cleans up only its own records.
+`test:local` requires a running local server and moderator key. It tests real Neon PostgreSQL account creation, password rejection, session restore, saved-plan persistence, origin validation, contributions, rate limiting, moderation and publication/rejection. It cleans up only its own records.
 
 Catalog tests check IDs, station references, image files, suggested pairs, search, strict budget/time limits, closed-place exclusion, Gem Score ordering, hidden-gem filtering, approved-only boosts, origin handling, plan estimates and all 576 railway station pairs. Local API tests also check duplicate-verification rejection.
 
 ## Stack
 
-React / TypeScript, Vinext with Next-compatible routing, Tailwind CSS, Cloudflare D1, Drizzle migrations, OpenStreetMap embeds and Google Maps links. No external map or AI API key is required.
+Next.js / React / TypeScript, Tailwind CSS, Neon PostgreSQL over HTTPS, parameterized queries, versioned SQL migrations, OpenStreetMap embeds and Google Maps links. No external map or AI API key is required.

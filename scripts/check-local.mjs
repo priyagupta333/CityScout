@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {execFileSync} from 'node:child_process';
+import nextEnv from '@next/env';
+import { neon } from '@neondatabase/serverless';
+nextEnv.loadEnvConfig(process.cwd());
 const base = process.env.APP_URL || 'http://localhost:3000';
 let authCookie = '', noteCookie = '', userId = '', sessionId = '';
 const createdReports = [];
 const email = `qa-${crypto.randomUUID()}@example.test`, password = crypto.randomUUID();
-const raw = fs.readFileSync('.dev.vars','utf8');
-const key = raw.match(/^MODERATION_KEY\s*=\s*["']?([^\r\n"']+)/m)?.[1]?.trim();
+const key = process.env.MODERATION_KEY;
 const request = async (path,method='GET',body,extra={}) => fetch(base+path,{method,headers:{Origin:base,'Content-Type':'application/json',...(authCookie ? {Cookie:authCookie} : {}),...extra},...(body ? {body:JSON.stringify(body)} : {})});
 try {
   let r = await request('/api/account','POST',{action:'signup',name:'QA Explorer',email,password,station:'Bandra',vibe:'Wanderer'});
@@ -40,7 +41,7 @@ try {
     r = await request('/api/moderation','PATCH',{id:createdReports[0],status:'rejected'},admin); assert.equal(r.status,200);
     r = await request('/api/community'); assert(!(await r.json()).some(p => p.id === createdReports[0]));
     console.log('PASS: contribution → moderation → publication → rejection and immediate public sync.');
-  } else throw new Error('Configure MODERATION_KEY in .dev.vars to verify moderation.');
+  } else throw new Error('Configure MODERATION_KEY in .env.local to verify moderation.');
   r = await request('/api/account','DELETE'); assert.equal(r.status,200);
   r = await request('/api/account'); assert.equal((await r.json()).user,null);
   r = await request('/api/account','POST',{action:'signin',email,password}); assert.equal(r.status,200);
@@ -55,7 +56,8 @@ try {
   ].join('\n');
   if(sql) {
     fs.mkdirSync('outputs',{recursive:true}); fs.writeFileSync('outputs/qa-cleanup.sql',sql);
-    execFileSync(process.execPath,['--import','./scripts/sites-env.mjs','./node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--local','--config','wrangler.local.json','--persist-to','.wrangler/state','--file','outputs/qa-cleanup.sql'],{stdio:'pipe'});
+    const sqlClient = neon(process.env.DATABASE_URL);
+    await sqlClient.transaction(sql.split(';').map(statement => statement.trim()).filter(Boolean).map(statement => sqlClient.query(statement)));
   }
   void sessionId;
 }

@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '../../../db/runtime';
 import { account, cookie, hashPassword, profile, token, type AccountRow } from '../../../lib/account';
 import { anchors } from '../../../lib/places';
 import { safeSameOrigin } from '../../../lib/community';
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 }
 export async function POST(request: Request) {
   if (!safeSameOrigin(request)) return Response.json({error:'Invalid request origin'}, {status:403});
-  if (!env.DB) return Response.json({error:'Database unavailable. Run npm run db:setup.'}, {status:503});
+  if (!env.DB) return Response.json({error:'Database unavailable. Configure DATABASE_URL and run npm run db:setup.'}, {status:503});
   let data;
   try { data = await request.json() as Record<string, unknown>; } catch { return Response.json({error:'Invalid JSON'}, {status:400}); }
   const email = typeof data.email === 'string' ? data.email.trim().toLowerCase() : '';

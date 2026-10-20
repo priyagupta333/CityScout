@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '../../../db/runtime';
 import { publicReport, type ContributionRow } from '../../../lib/community';
 
 export async function GET() {
