@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ApnaShehar — Mumbai, a little less obvious",
+  title: "CityScout — Mumbai, a little less obvious",
   description: "Find local Mumbai places and little outings that fit your time, mood, and budget.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/apnashehar-icon.svg",
-    shortcut: "/apnashehar-icon.svg",
+    icon: "/cityscout-icon.svg",
+    shortcut: "/cityscout-icon.svg",
   },
 };
 

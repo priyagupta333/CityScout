@@ -1,8 +1,8 @@
-# ApnaShehar
+# CityScout
 
-**ApnaShehar — apna shehar, har gali mein ek nayi kahani.**
+**CityScout — apna shehar, har gali mein ek nayi kahani.**
 
-Mumbai discovery and outing planning, built by CtrlFreaks for Techformers 2026. This repository retains the original CityScout repository name; the application brand is ApnaShehar.
+Mumbai discovery and outing planning, built by CtrlFreaks for Techformers 2026. The application and repository are both named CityScout.
 
 **Hosting:** Standard Next.js + Neon PostgreSQL, ready for Vercel configuration. See [the deployment guide](docs/DEPLOYMENT.md) for exact settings and environment variables.
 

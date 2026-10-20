@@ -1,11 +1,11 @@
-const CACHE = 'apnashehar-shell-v2';
-const SHELL = ['/', '/manifest.webmanifest', '/apnashehar-icon.svg', '/apnashehar-192.png', '/apnashehar-512.png'];
+const CACHE = 'cityscout-shell-v3';
+const SHELL = ['/', '/manifest.webmanifest', '/cityscout-icon.svg', '/cityscout-192.png', '/cityscout-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
   self.skipWaiting();
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE && /^(apnashehar|galli)-shell-/.test(key)).map(key => caches.delete(key)))));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE && /^(cityscout|apnashehar|galli)-shell-/.test(key)).map(key => caches.delete(key)))));
   self.clients.claim();
 });
 self.addEventListener('fetch', event => {
@@ -15,7 +15,7 @@ self.addEventListener('fetch', event => {
     event.respondWith(fetch(request).then(response => {
       if(response.ok) { const copy = response.clone(); event.waitUntil(caches.open(CACHE).then(cache => cache.put('/',copy))); }
       return response;
-    }).catch(async () => (await caches.match('/')) || new Response('ApnaShehar is offline. Reconnect to load your city guide.',{status:503,headers:{'Content-Type':'text/plain'}})));
+    }).catch(async () => (await caches.match('/')) || new Response('CityScout is offline. Reconnect to load your city guide.',{status:503,headers:{'Content-Type':'text/plain'}})));
     return;
   }
   if(url.pathname.startsWith('/images/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/_next/static/')) {

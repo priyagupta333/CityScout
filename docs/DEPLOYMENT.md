@@ -1,4 +1,4 @@
-# Deploy ApnaShehar with Neon and Vercel
+# Deploy CityScout with Neon and Vercel
 
 The application now runs as standard Next.js on Node.js, using Neon PostgreSQL over HTTPS. Cloudflare bindings are no longer required by the running app. The old D1 tooling and migrations remain only as historical/local migration references.
 

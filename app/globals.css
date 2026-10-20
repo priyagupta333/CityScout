@@ -405,7 +405,7 @@ body {
   gap: 6px;
 }
 
-/* Shared ApnaShehar surfaces, readable at every browser width. */
+/* Shared CityScout surfaces, readable at every browser width. */
 :root{--muted:#526151;--orange:#b54729;--serif:Georgia,'Times New Roman',serif;--sans:'Segoe UI',Arial,sans-serif}
 body{font-size:16px;line-height:1.5}
 .container{width:min(1240px,calc(100% - 64px))}
@@ -456,7 +456,7 @@ input,select,textarea{font-size:16px;min-width:0}
 .score-explanation dl{margin:20px 0}.score-explanation dl>div{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.score-explanation dd{font-weight:700;margin:0;white-space:nowrap}
 .horizontal-place-card{border-radius:14px}.horizontal-card-milestone{font-size:11px;background:#183d2a;color:#fff0cb;max-width:calc(100% - 80px)}
 .horizontal-card-title{font-size:27px}.horizontal-card-sub{font-size:15px}.horizontal-card-meta{flex-wrap:wrap;gap:8px}.horizontal-card-stats strong{font-size:16px}.stat-label{font-size:12px}
-.horizontal-card-actions .button{font-size:14px;min-height:44px}.apnashehar-walk-badge,.apnashehar-track-info{font-size:13px}.apnashehar-walk-badge{flex-wrap:wrap}.apnashehar-walk-nav-btns{display:flex;gap:8px}.apnashehar-nav-btn{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:#fffdf7}.street-trail-stop{font-size:13px;min-height:44px}.street-trail-label{white-space:nowrap}
+.horizontal-card-actions .button{font-size:14px;min-height:44px}.cityscout-walk-badge,.cityscout-track-info{font-size:13px}.cityscout-walk-badge{flex-wrap:wrap}.cityscout-walk-nav-btns{display:flex;gap:8px}.cityscout-nav-btn{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:#fffdf7}.street-trail-stop{font-size:13px;min-height:44px}.street-trail-label{white-space:nowrap}
 .collection-card{border-radius:14px;min-height:200px;padding:24px}.collection-card h3{font-size:30px;line-height:1.2;overflow-wrap:anywhere}.collection-card .eyebrow{font-size:12px}.collection-card p,.editorial-copy p{font-size:15px;color:#526151}
 .community-band{border-radius:14px}.community-band p{font-size:15px;color:#e2e9d9}.community-band .button{font-size:14px}
 .footer-top,.footer-brand,.footer-links,.footer-bottom{flex-wrap:wrap}.footer-links button,.footer-bottom,.footer-bottom button,.footer-brand p{font-size:13px;color:#526151}.footer-links button,.footer-bottom button{min-height:44px}.footer-bottom span{display:block}

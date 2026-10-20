@@ -28,7 +28,7 @@ type Report = { id: string; placeId: string | null; placeName: string; topic: st
 const readStore = <T,>(key: string, fallback: T): T => { try { return JSON.parse(localStorage.getItem(key) || '') as T; } catch { return fallback; } };
 const scrollToExplore = () => document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
 
-export default function ApnaSheharApp() {
+export default function CityScoutApp() {
   const [tab, setTab] = useState<Tab>('discover');
   const [anchor, setAnchor] = useState('Matunga');
   const [origin, setOrigin] = useState<{ lat: number; lng: number }>();
@@ -136,7 +136,7 @@ export default function ApnaSheharApp() {
     setOrigin(undefined);
     localStorage.setItem('apnashehar:entered', 'true');
     if (newUser.station) setAnchor(newUser.station);
-    showToast(`Explorer account created! Welcome to ApnaShehar, ${newUser.name}.`);
+    showToast(`Explorer account created! Welcome to CityScout, ${newUser.name}.`);
   };
 
   const handleSignOut = async () => {
@@ -148,13 +148,13 @@ export default function ApnaSheharApp() {
     setUserDropdown(false);
     localStorage.removeItem('apnashehar:user');
     localStorage.removeItem('apnashehar:entered');
-    showToast('Signed out of ApnaShehar. See you in the lanes soon!');
+    showToast('Signed out of CityScout. See you in the lanes soon!');
   };
 
   const handleEnterGuest = () => {
     setEntered(true);
     localStorage.setItem('apnashehar:entered', 'true');
-    setAuthModal(false); showToast('Welcome to ApnaShehar. Your city, your kind of day.');
+    setAuthModal(false); showToast('Welcome to CityScout. Your city, your kind of day.');
   };
 
   // Horizontal Walk Scrolling Helpers
@@ -245,9 +245,9 @@ export default function ApnaSheharApp() {
         
         <header className="entrance-header">
           <div className="container entrance-header-inner">
-            <button className="entrance-brand" onClick={() => {}} aria-label="ApnaShehar portal">
+            <button className="entrance-brand" onClick={() => {}} aria-label="CityScout portal">
               <span className="entrance-brand-icon"><Compass size={34} strokeWidth={2.2}/></span>
-              <span>ApnaShehar<span style={{color:'var(--orange)'}}>.</span></span>
+              <span>CityScout<span style={{color:'var(--orange)'}}>.</span></span>
             </button>
             <div style={{display:'flex', gap:'12px', alignItems:'center'}}>
               <span className="entrance-badge"><MapPin size={13}/> MUMBAI EXPLORER PORTAL</span>
@@ -306,7 +306,7 @@ export default function ApnaSheharApp() {
   }
 
   // -------------------------------------------------------------
-  // VIEW: MAIN APNASHEHAR APPLICATION (Entered)
+  // VIEW: MAIN CITYSCOUT APPLICATION (Entered)
   // -------------------------------------------------------------
   return <>
     <div className="topline">
@@ -315,9 +315,9 @@ export default function ApnaSheharApp() {
 
     <header className="site-header">
       <div className="container header-inner">
-        <button className="logo" onClick={() => switchTab('discover')} aria-label="ApnaShehar home">
+        <button className="logo" onClick={() => switchTab('discover')} aria-label="CityScout home">
           <span className="logo-mark"><Compass size={32} strokeWidth={2}/></span>
-          ApnaShehar<span style={{color:'var(--orange)'}}>.</span>
+          CityScout<span style={{color:'var(--orange)'}}>.</span>
         </button>
 
         <nav className="nav" aria-label="Main navigation">
@@ -362,7 +362,7 @@ export default function ApnaSheharApp() {
                     <Key size={15}/> Curator Desk
                   </button>
                   <button className="user-dropdown-item signout-item" onClick={handleSignOut}>
-                    <LogOut size={15}/> Sign Out &amp; Exit ApnaShehar
+                    <LogOut size={15}/> Sign Out &amp; Exit CityScout
                   </button>
                 </div>
               )}
@@ -540,7 +540,7 @@ export default function ApnaSheharApp() {
 
           {activePlaces.length===0 ? <div className="empty"><Search size={30}/><h3>No places match these filters.</h3><p>Try another neighborhood, mood, budget or time allowance.</p><button className="button primary" onClick={resetFilters}>Clear filters</button></div> : view === 'walk' ? (
             /* ============================================================== */
-            /* HORIZONTAL APNASHEHAR STREET WALK (Primary requested experience)     */
+            /* HORIZONTAL CITYSCOUT STREET WALK (Primary requested experience)     */
             /* ============================================================== */
             <div className="horizontal-walk-wrapper">
               <div className="street-trail-strip">
@@ -559,16 +559,16 @@ export default function ApnaSheharApp() {
               </div>
 
               <div className="horizontal-walk-topbar">
-                <div className="apnashehar-walk-badge">
+                <div className="cityscout-walk-badge">
                   <span className="live-dot" />
                   <span>YOUR MUMBAI STREET WALK</span>
-                  <span className="apnashehar-track-info">(Scroll horizontally with trackpad, mouse wheel, or arrows)</span>
+                  <span className="cityscout-track-info">(Scroll horizontally with trackpad, mouse wheel, or arrows)</span>
                 </div>
-                <div className="apnashehar-walk-nav-btns">
-                  <button className="apnashehar-nav-btn" onClick={() => scrollWalk('left')} aria-label="Scroll left in ApnaShehar">
+                <div className="cityscout-walk-nav-btns">
+                  <button className="cityscout-nav-btn" onClick={() => scrollWalk('left')} aria-label="Scroll left in CityScout">
                     <ChevronLeft size={20}/>
                   </button>
-                  <button className="apnashehar-nav-btn" onClick={() => scrollWalk('right')} aria-label="Scroll right in ApnaShehar">
+                  <button className="cityscout-nav-btn" onClick={() => scrollWalk('right')} aria-label="Scroll right in CityScout">
                     <ChevronRight size={20}/>
                   </button>
                 </div>
@@ -722,7 +722,7 @@ export default function ApnaSheharApp() {
             <h2>There’s more to Mumbai than the usual list.</h2>
             <p>A lane you’ve walked past. A bookstore with an hour to spare. A coastal fort worth getting off the local train for. We’re collecting small city moments and the practical details that make them possible.</p>
             <button className="text-button" onClick={() => switchTab('notes')}>
-              The story behind ApnaShehar <ArrowRight size={14}/>
+              The story behind CityScout <ArrowRight size={14}/>
             </button>
           </div>
         </section>
@@ -798,9 +798,9 @@ export default function ApnaSheharApp() {
     {tab === 'notes' && (
       <main className="container">
         <div className="page-intro">
-          <div className="eyebrow">A NOTE FROM APNASHEHAR</div>
+          <div className="eyebrow">A NOTE FROM CITYSCOUT</div>
           <h1>The city is more than a checklist.</h1>
-          <p>ApnaShehar is a Mumbai-first discovery guide for the free hours, small budgets and everyday adventures that rarely make a tourist itinerary.</p>
+          <p>CityScout is a Mumbai-first discovery guide for the free hours, small budgets and everyday adventures that rarely make a tourist itinerary.</p>
         </div>
         <div className="about-grid">
           <div className="about-card"><Wallet size={28}/><h3>Know the real spend.</h3><p>We include an illustrative travel allowance and show costs as a range. Every estimate is marked until someone checks it locally.</p></div>
@@ -816,7 +816,7 @@ export default function ApnaSheharApp() {
           <div className="note-block">
             <div className="eyebrow">CARE FOR THE CITY</div>
             <h2>Good discovery comes with good manners.</h2>
-            <p>Some destinations are homes, places of worship or sensitive natural spaces. ApnaShehar includes etiquette and access notes, and avoids sending people into private or restricted areas. Report a problem on any place card if something has changed.</p>
+            <p>Some destinations are homes, places of worship or sensitive natural spaces. CityScout includes etiquette and access notes, and avoids sending people into private or restricted areas. Report a problem on any place card if something has changed.</p>
           </div>
           <div className="note-block">
             <div className="eyebrow">IMAGE CREDITS</div>
@@ -873,7 +873,7 @@ export default function ApnaSheharApp() {
         <div className="footer-top">
           <div className="footer-brand">
             <button className="logo" style={{fontSize:32}} onClick={() => switchTab('discover')}>
-              <span className="logo-mark"><Compass size={22}/></span>ApnaShehar<span style={{color:'var(--orange)'}}>.</span>
+              <span className="logo-mark"><Compass size={22}/></span>CityScout<span style={{color:'var(--orange)'}}>.</span>
             </button>
             <p>Small discoveries. Better days.</p>
           </div>
@@ -886,7 +886,7 @@ export default function ApnaSheharApp() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© 2026 ApnaShehar. Made with care for Mumbai. · {places.length} curated places. Sample data.</span>
+          <span>© 2026 CityScout. Made with care for Mumbai. · {places.length} curated places. Sample data.</span>
           <button onClick={() => switchTab('admin')}>Curator desk</button>
         </div>
       </div>
@@ -1003,7 +1003,7 @@ export default function ApnaSheharApp() {
             <div className="caution"><Info size={15}/><span>Cost and travel time are planning estimates based on suburban rail and walking.</span></div>
             <div className="detail-actions">
               <button className="button primary" disabled={closed.has(plan.id)&&!planIsSaved} onClick={savePlan}>{planIsSaved?'Remove saved plan':'Save this plan'} <Heart size={14}/></button>
-              <button className="button secondary" onClick={() => share('My ApnaShehar mini-plan',`plan=${plan.id}${pair ? ','+pair.id : ''}&from=${encodeURIComponent(portableAnchor)}`)}>Share plan <ArrowUpRight size={14}/></button>
+              <button className="button secondary" onClick={() => share('My CityScout mini-plan',`plan=${plan.id}${pair ? ','+pair.id : ''}&from=${encodeURIComponent(portableAnchor)}`)}>Share plan <ArrowUpRight size={14}/></button>
               <a className="button secondary" href={directions(plan,anchor === 'Near me' ? undefined : anchor)} target="_blank" rel="noopener noreferrer">First stop directions <Navigation size={14}/></a>{pair&&<a className="button secondary" href={directions(plan,undefined,pair)} target="_blank" rel="noopener noreferrer">Next stop directions <Navigation size={14}/></a>}
             </div>
           </div>
@@ -1142,7 +1142,7 @@ function AuthCard({
 
       {tab === 'signup' ? (
         <form onSubmit={e=>authenticate(e,'signup')}>
-          <h2 className="auth-form-title">Join ApnaShehar</h2>
+          <h2 className="auth-form-title">Join CityScout</h2>
           <p className="auth-form-desc">Create your city explorer profile to bookmark gems and wander.</p>
           
           <div className="auth-field">
@@ -1180,7 +1180,7 @@ function AuthCard({
             <div className="auth-field">
               <label htmlFor="reg-vibe">Explorer Vibe</label>
               <select id="reg-vibe" value={vibe} onChange={e => setVibe(e.target.value)}>
-                <option value="Wanderer">🧭 ApnaShehar Wanderer</option>
+                <option value="Wanderer">🧭 CityScout Wanderer</option>
                 <option value="Coffee lover">☕ Coffee &amp; Snack</option>
                 <option value="Heritage seeker">🏛️ Heritage Seeker</option>
                 <option value="Sunset chaser">🌅 Sunset Chaser</option>
@@ -1203,7 +1203,7 @@ function AuthCard({
           {error && <p className="error-message" style={{margin:'10px 0', fontSize:'12px'}}>{error}</p>}
 
           <button className="auth-submit-btn" type="submit" disabled={busy}>
-            Create Account &amp; Enter ApnaShehar <ArrowRight size={15}/>
+            Create Account &amp; Enter CityScout <ArrowRight size={15}/>
           </button>
         </form>
       ) : (
@@ -1238,7 +1238,7 @@ function AuthCard({
           {error && <p className="error-message" style={{margin:'10px 0', fontSize:'12px'}}>{error}</p>}
 
           <button className="auth-submit-btn" type="submit" disabled={busy}>
-            Sign In &amp; Enter ApnaShehar <ArrowRight size={15}/>
+            Sign In &amp; Enter CityScout <ArrowRight size={15}/>
           </button>
 
         </form>
@@ -1351,7 +1351,7 @@ function Contribution({ initialPlace, initialTopic, onClose, onSuccess }: { init
           <div className="success-panel">
             <CheckCircle2 size={46}/>
             <h3>Thanks for looking out.</h3>
-            <p>Your field note is saved for a curator to review. Helpful, specific updates make ApnaShehar worth using.</p>
+            <p>Your field note is saved for a curator to review. Helpful, specific updates make CityScout worth using.</p>
             <button className="button primary" onClick={onClose}>Back to the city <ArrowRight size={14}/></button>
           </div>
         ) : (

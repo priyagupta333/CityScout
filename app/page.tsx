@@ -1,2 +1,2 @@
-import ApnaSheharApp from './ui';
-export default function Home() { return <ApnaSheharApp />; }
+import CityScoutApp from './ui';
+export default function Home() { return <CityScoutApp />; }
