@@ -25,6 +25,13 @@ try {
   r = await request('/api/account','POST',{action:'signin',email,password:'incorrect-password'}); assert.equal(r.status,401);
   r = await request('/api/library','PUT',{saved:['madras','bandra-fort'],plans:[{ids:['madras','ashok-vada'],anchor:'Matunga',savedAt:Date.now()}]}); assert.equal(r.status,200);
   r = await request('/api/library'); const saved = await r.json(); assert.equal(saved.saved.length,2); assert.equal(saved.plans.length,1);
+  const fourStopPlan={ids:['five-gardens','madras','shivaji-park','ashok-vada'],anchor:'Matunga',mode:'walking',budget:300,minutes:300,savedAt:Date.now()};
+  r = await request('/api/library','PUT',{saved:['madras','bandra-fort'],plans:[fourStopPlan]}); assert.equal(r.status,200);
+  r = await request('/api/library'); assert.deepEqual((await r.json()).plans,[fourStopPlan]);
+  for(const invalid of [{...fourStopPlan,ids:[...fourStopPlan.ids,'powai']},{...fourStopPlan,ids:['madras','madras']},{...fourStopPlan,mode:'teleport'},{...fourStopPlan,budget:-1},{...fourStopPlan,minutes:0}]) {
+    r = await request('/api/library','PUT',{saved:[],plans:[invalid]});assert.equal(r.status,400);
+  }
+  console.log('PASS: four-stop walking plans persist; duplicate stops, five stops and invalid travel modes are rejected.');
   r = await request('/api/library','PUT',{saved:['missing-id'],plans:[]}); assert.equal(r.status,400);
   r = await request('/api/library','PUT',{saved:[],plans:[]},{Origin:'https://invalid.example'}); assert.equal(r.status,403);
   r = await request('/api/contributions','POST',{placeId:'missing',topic:'A local tip',note:'This must not be saved.'}); assert.equal(r.status,400);

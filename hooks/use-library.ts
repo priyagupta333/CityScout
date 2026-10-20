@@ -2,11 +2,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { anchors, places } from '../lib/places';
 
-export type SavedPlan = {ids:string[];anchor:string;savedAt:number};
+export type SavedPlan = {ids:string[];anchor:string;savedAt:number;mode?:'transit'|'walking';budget?:number;minutes?:number};
 type Library = {saved:string[];plans:SavedPlan[]};
 function clean(value: Partial<Library> | null): Library {
   if (!value || typeof value !== 'object') return {saved:[],plans:[]};
-  return {saved:Array.isArray(value.saved) ? value.saved.filter(id => places.some(p => p.id === id)) : [],plans:Array.isArray(value.plans) ? value.plans.filter(p => p && Array.isArray(p.ids) && p.ids.length > 0 && p.ids.length <= 2 && Number.isFinite(p.savedAt) && p.ids.every(id => places.some(x => x.id === id)) && (anchors.some(a => a.name === p.anchor) || p.anchor === 'Near me')) : []};
+  return {saved:Array.isArray(value.saved) ? value.saved.filter(id => places.some(p => p.id === id)) : [],plans:Array.isArray(value.plans) ? value.plans.filter(p => p && Array.isArray(p.ids) && p.ids.length > 0 && p.ids.length <= 4 && (p.mode === undefined || p.mode === 'transit' || p.mode === 'walking') && (p.budget === undefined || (typeof p.budget === 'number' && Number.isFinite(p.budget) && p.budget >= 0 && p.budget <= 10000)) && (p.minutes === undefined || (typeof p.minutes === 'number' && Number.isFinite(p.minutes) && p.minutes >= 1 && p.minutes <= 10000)) && Number.isFinite(p.savedAt) && new Set(p.ids).size === p.ids.length && p.ids.every(id => places.some(x => x.id === id)) && (anchors.some(a => a.name === p.anchor) || p.anchor === 'Near me')) : []};
 }
 function read(key: string): Library {
   try { return clean(JSON.parse(localStorage.getItem(key) || '{}')); } catch { return {saved:[],plans:[]}; }
