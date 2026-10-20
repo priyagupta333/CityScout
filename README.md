@@ -88,7 +88,15 @@ Preserve strict filters, explicit sample-data labels, readable contrast and resp
 
 The initial Git history imports the existing application in 50 commits grouped by source area and documentation. These commits describe an import of the current snapshot, not 50 separately developed releases. No project-wide open-source license is declared; retain bundled third-party notices, including `build/sites-vite-plugin.LICENSE`.
 
-A Mumbai discovery app for small budgets and free afternoons. Explore 30 places from 24 railway stations plus a Powai road origin, search neighborhoods and venues, rank by Gem Score, switch between grid, street walk and railway map views, and build one- or two-stop outings. The existing mini-plan flow is retained; there are no preset trails.
+A Mumbai discovery app for small budgets and free afternoons. Explore 30 places from 24 railway stations plus a Powai road origin, search neighborhoods and venues, rank by Gem Score, switch between grid, street walk and railway map views, and build outings with up to four stops. There are no preset trails.
+
+## Personalised finder and student outings
+
+The navbar now includes **Plan my day**, a dedicated page for **Find your kind of escape**, Student Budget Mode and smart mini-itineraries. Choose a vibe, solo/friends, starting point, per-person budget, optional area, time and travel mode. Recommendations show a transparent compatibility percentage and reasons, separate from Gem Score. Budget, area, time and closure restrictions are never silently relaxed. This is rule-based personalisation; no AI key is required.
+
+**Student Budget Mode** adds free walking outings, INR 100/300 presets, custom budgets, study-break and park/view discovery. **Make my day** builds a shortlist within combined estimated cost and time. Study-break tags do not establish permission to use a venue as a study space. Thrift discovery includes nearby external map searches, a sourced vintage-market lead and a contribution flow; no unverified discount or stock is represented as available inventory.
+
+Select two to four recommended places, then build an itinerary. All existing place-based plans now support one to four stops, reordering, removal, estimated walking or rail travel, a return leg, per-person spending breakdown, budget/time warnings and save/share restoration. Stop optimisation evaluates every ordering for the selected stops (at most 24). Maps and times are approximate; opening hours are not verified or automatically enforced. See [the feature guide](docs/SMART_DISCOVERY.md).
 
 ## Run locally
 
